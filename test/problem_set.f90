@@ -1,7 +1,7 @@
 module problem_set
 
     use kinds
-    use odesolver
+    use ode
 
     implicit none
 
@@ -34,13 +34,13 @@ module problem_set
             import                              :: test_ode_system
             class(test_ode_system), intent(in)  :: this
             real(kind=rp), allocatable          :: yinit(:)
-        end function user_yinit 
+        end function user_yinit
         pure function user_yend(this) result(yend)
             use kinds
             import                              :: test_ode_system
             class(test_ode_system), intent(in)  :: this
-            real(kind=rp), allocatable          :: yend(:)       
-        end function user_yend 
+            real(kind=rp), allocatable          :: yend(:)
+        end function user_yend
         pure real(kind=rp) function user_tinit(this) result(tinit)
             use kinds
             import                              :: test_ode_system
@@ -71,13 +71,13 @@ module problem_set
 
     type, public, extends(test_ode_system) :: p01_system
         character(len=len(p01_title))  :: title = p01_title
-        integer, private               :: numeq = 1
+        integer                        :: neqn = 1
         real(kind=rp), private         :: t_init = 0.0_rp
         real(kind=rp), private         :: t_end  = 20.0_rp
         logical                        :: analitic_sol = .true.
     contains
+        procedure, pass                :: dim => p01_dim
         procedure, pass                :: feval => p01_feval
-        procedure, pass                :: neqn => p01_neqn
         procedure, pass                :: gettitle => p01_gettitle
         procedure, pass                :: yinit => p01_yinit
         procedure, pass                :: yend => p01_yend
@@ -89,13 +89,13 @@ module problem_set
 
     type, public, extends(test_ode_system) :: p02_system
         character(len=len(p02_title))  :: title = p02_title
-        integer, private               :: numeq = 1
+        integer                        :: neqn = 1
         real(kind=rp), private         :: t_init = 0.0_rp
         real(kind=rp), private         :: t_end  = 20.0_rp
         logical                        :: analitic_sol = .true.
     contains
+        procedure, pass                :: dim => p02_dim
         procedure, pass                :: feval => p02_feval
-        procedure, pass                :: neqn => p02_neqn
         procedure, pass                :: gettitle => p02_gettitle
         procedure, pass                :: yinit => p02_yinit
         procedure, pass                :: yend => p02_yend
@@ -107,13 +107,13 @@ module problem_set
 
     type, public, extends(test_ode_system) :: p03_system
         character(len=len(p03_title))  :: title = p03_title
-        integer, private               :: numeq = 1
+        integer                        :: neqn = 1
         real(kind=rp), private         :: t_init = 0.0_rp
         real(kind=rp), private         :: t_end  = 20.0_rp
         logical                        :: analitic_sol = .true.
     contains
+        procedure, pass                :: dim => p03_dim
         procedure, pass                :: feval => p03_feval
-        procedure, pass                :: neqn => p03_neqn
         procedure, pass                :: gettitle => p03_gettitle
         procedure, pass                :: yinit => p03_yinit
         procedure, pass                :: yend => p03_yend
@@ -125,13 +125,13 @@ module problem_set
 
     type, public, extends(test_ode_system) :: p04_system
         character(len=len(p04_title))  :: title = p04_title
-        integer, private               :: numeq = 1
+        integer                        :: neqn = 1
         real(kind=rp), private         :: t_init = 0.0_rp
         real(kind=rp), private         :: t_end  = 20.0_rp
         logical                        :: analitic_sol = .true.
     contains
+        procedure, pass                :: dim => p04_dim
         procedure, pass                :: feval => p04_feval
-        procedure, pass                :: neqn => p04_neqn
         procedure, pass                :: gettitle => p04_gettitle
         procedure, pass                :: yinit => p04_yinit
         procedure, pass                :: yend => p04_yend
@@ -143,13 +143,13 @@ module problem_set
 
     type, public, extends(test_ode_system) :: p05_system
         character(len=len(p05_title))  :: title = p05_title
-        integer, private               :: numeq = 1
+        integer                        :: neqn = 1
         real(kind=rp), private         :: t_init = 0.0_rp
         real(kind=rp), private         :: t_end  = 20.0_rp
         logical                        :: analitic_sol = .false.
     contains
+        procedure, pass                :: dim => p05_dim
         procedure, pass                :: feval => p05_feval
-        procedure, pass                :: neqn => p05_neqn
         procedure, pass                :: gettitle => p05_gettitle
         procedure, pass                :: yinit => p05_yinit
         procedure, pass                :: yend => p05_yend
@@ -161,13 +161,13 @@ module problem_set
 
     type, public, extends(test_ode_system) :: plei_system
         character(len=len(plei_title)) :: title = plei_title
-        integer, private               :: numeq = 28
+        integer                        :: neqn = 28
         real(kind=rp), private         :: t_init = 0.0_rp
         real(kind=rp), private         :: t_end  = 3.0_rp
         logical                        :: analitic_sol = .false.
     contains
+        procedure, pass                :: dim => plei_dim
         procedure, pass                :: feval => plei_feval
-        procedure, pass                :: neqn => plei_neqn
         procedure, pass                :: gettitle => plei_gettitle
         procedure, pass                :: yinit => plei_yinit
         procedure, pass                :: yend => plei_yend
@@ -175,14 +175,14 @@ module problem_set
         procedure, pass                :: tend  => plei_tend
         procedure, pass                :: ysol => plei_ysol
         procedure, pass                :: analiticsol => plei_anltc
-    end type plei_system 
+    end type plei_system
 
 contains
 
     subroutine allocate_test_problems(problems)
         implicit none
         type(test_problems), allocatable    :: problems(:)
-        
+
         if (allocated(problems)) deallocate(problems)
 
         allocate(problems(6))
@@ -200,7 +200,7 @@ contains
         type(test_problems), allocatable    :: problems(:)
         integer                             :: i
         if (.not.allocated(problems)) return
-        
+
         do i = 1, size(problems,1)
             if (associated(problems(i)%problem)) deallocate(problems(i)%problem)
         end do
@@ -208,23 +208,25 @@ contains
         return
     end subroutine deallocate_test_problems
 
+
     ! P01 Problem
-    subroutine p01_feval(this, t, y, yp)
+    integer pure function p01_dim(this) result(n)
+        implicit none
+        class(p01_system), intent(in)   :: this
+        n = this%neqn
+    end function p01_dim
+
+    pure subroutine p01_feval(this, t, y, yp, stat)
         implicit none
         class(p01_system), intent(in)  :: this
         real(kind=rp), intent(in)       :: t
         real(kind=rp), intent(in)       :: y(:)
         real(kind=rp), intent(out)      :: yp(:)
+        logical, intent(out)            :: stat
         yp = -y
+        stat = .true.
         return
     end subroutine p01_feval
-
-    pure integer function p01_neqn(this) result(neqn)
-        implicit none
-        class(p01_system), intent(in)  :: this
-        neqn = this%numeq
-        return
-    end function p01_neqn
 
     pure function p01_gettitle(this) result(title)
         implicit none
@@ -241,16 +243,16 @@ contains
         allocate(yinit(1))
         yinit = 1.0_rp
         return
-    end function p01_yinit 
+    end function p01_yinit
 
     pure function p01_yend(this) result(yend)
         implicit none
         class(p01_system), intent(in)  :: this
-        real(kind=rp), allocatable     :: yend(:)       
+        real(kind=rp), allocatable     :: yend(:)
         allocate(yend(1))
         yend(1) = 2.061153353012535e-09_rp
         return
-    end function p01_yend 
+    end function p01_yend
 
     pure real(kind=rp) function p01_tinit(this) result(tinit)
         implicit none
@@ -281,22 +283,23 @@ contains
     end function p01_anltc
 
     ! P02 Problem
-    subroutine p02_feval(this, t, y, yp)
+    integer pure function p02_dim(this) result(n)
+        implicit none
+        class(p02_system), intent(in)   :: this
+        n = this%neqn
+    end function p02_dim
+
+    pure subroutine p02_feval(this, t, y, yp, stat)
         implicit none
         class(p02_system), intent(in)   :: this
         real(kind=rp), intent(in)       :: t
         real(kind=rp), intent(in)       :: y(:)
         real(kind=rp), intent(out)      :: yp(:)
+        logical, intent(out)            :: stat
         yp =  - 0.5_rp*y**3
+        stat = .true.
         return
     end subroutine p02_feval
-
-    pure integer function p02_neqn(this) result(neqn)
-        implicit none
-        class(p02_system), intent(in)   :: this
-        neqn = this%numeq
-        return
-    end function p02_neqn
 
     pure function p02_gettitle(this) result(title)
         implicit none
@@ -313,16 +316,16 @@ contains
         allocate(yinit(1))
         yinit(1) = 1.0_rp
         return
-    end function p02_yinit 
+    end function p02_yinit
 
     pure function p02_yend(this) result(yend)
         implicit none
         class(p02_system), intent(in)   :: this
-        real(kind=rp), allocatable      :: yend(:)       
+        real(kind=rp), allocatable      :: yend(:)
         allocate(yend(1))
         yend(1) = 0.2182178902359887_rp
         return
-    end function p02_yend 
+    end function p02_yend
 
     pure real(kind=rp) function p02_tinit(this) result(tinit)
         implicit none
@@ -353,22 +356,23 @@ contains
     end function p02_anltc
 
     ! P03 Problem
-    subroutine p03_feval(this, t, y, yp)
+    integer pure function p03_dim(this) result(n)
+        implicit none
+        class(p03_system), intent(in)   :: this
+        n = this%neqn
+    end function p03_dim
+
+    pure subroutine p03_feval(this, t, y, yp, stat)
         implicit none
         class(p03_system), intent(in)   :: this
         real(kind=rp), intent(in)       :: t
         real(kind=rp), intent(in)       :: y(:)
         real(kind=rp), intent(out)      :: yp(:)
+        logical, intent(out)            :: stat
         yp =  y*cos(t)
+        stat = .true.
         return
     end subroutine p03_feval
-
-    pure integer function p03_neqn(this) result(neqn)
-        implicit none
-        class(p03_system), intent(in)   :: this
-        neqn = this%numeq
-        return
-    end function p03_neqn
 
     pure function p03_gettitle(this) result(title)
         implicit none
@@ -385,16 +389,16 @@ contains
         allocate(yinit(1))
         yinit = 1.0_rp
         return
-    end function p03_yinit 
+    end function p03_yinit
 
     pure function p03_yend(this) result(yend)
         implicit none
         class(p03_system), intent(in)   :: this
-        real(kind=rp), allocatable      :: yend(:)       
+        real(kind=rp), allocatable      :: yend(:)
         allocate(yend(1))
         yend = 2.491650271850414_rp
         return
-    end function p03_yend 
+    end function p03_yend
 
     pure real(kind=rp) function p03_tinit(this) result(tinit)
         implicit none
@@ -425,22 +429,23 @@ contains
     end function p03_anltc
 
     ! P04 Problem
-    subroutine p04_feval(this, t, y, yp)
+    integer pure function p04_dim(this) result(n)
+        implicit none
+        class(p04_system), intent(in)   :: this
+        n = this%neqn
+    end function p04_dim
+
+    pure subroutine p04_feval(this, t, y, yp, stat)
         implicit none
         class(p04_system), intent(in)   :: this
         real(kind=rp), intent(in)       :: t
         real(kind=rp), intent(in)       :: y(:)
         real(kind=rp), intent(out)      :: yp(:)
+        logical, intent(out)            :: stat
         yp =  y*(20.0_rp-y)/80.0_rp
+        stat = .true.
         return
     end subroutine p04_feval
-
-    pure integer function p04_neqn(this) result(neqn)
-        implicit none
-        class(p04_system), intent(in)   :: this
-        neqn = this%numeq
-        return
-    end function p04_neqn
 
     pure function p04_gettitle(this) result(title)
         implicit none
@@ -457,16 +462,16 @@ contains
         allocate(yinit(1))
         yinit = 1.0_rp
         return
-    end function p04_yinit 
+    end function p04_yinit
 
     pure function p04_yend(this) result(yend)
         implicit none
         class(p04_system), intent(in)   :: this
-        real(kind=rp), allocatable      :: yend(:)       
+        real(kind=rp), allocatable      :: yend(:)
         allocate(yend(1))
         yend = 17.73016648131483_rp
         return
-    end function p04_yend 
+    end function p04_yend
 
     pure real(kind=rp) function p04_tinit(this) result(tinit)
         implicit none
@@ -497,22 +502,23 @@ contains
     end function p04_anltc
 
     ! P05 Problem
-    subroutine p05_feval(this, t, y, yp)
+    integer pure function p05_dim(this) result(n)
+        implicit none
+        class(p05_system), intent(in)   :: this
+        n = this%neqn
+    end function p05_dim
+
+    pure subroutine p05_feval(this, t, y, yp, stat)
         implicit none
         class(p05_system), intent(in)   :: this
         real(kind=rp), intent(in)       :: t
         real(kind=rp), intent(in)       :: y(:)
         real(kind=rp), intent(out)      :: yp(:)
+        logical, intent(out)            :: stat
         yp =  (y-t)/(y+t)
+        stat = .true.
         return
     end subroutine p05_feval
-
-    pure integer function p05_neqn(this) result(neqn)
-        implicit none
-        class(p05_system), intent(in)   :: this
-        neqn = this%numeq
-        return
-    end function p05_neqn
 
     pure function p05_gettitle(this) result(title)
         implicit none
@@ -529,7 +535,7 @@ contains
         allocate(yinit(1))
         yinit = 4.0_rp
         return
-    end function p05_yinit 
+    end function p05_yinit
 
     pure function p05_yend(this) result(yend)
         implicit none
@@ -538,7 +544,7 @@ contains
         allocate(yend(1))
         yend = -0.788782668896419_rp
         return
-    end function p05_yend 
+    end function p05_yend
 
     pure real(kind=rp) function p05_tinit(this) result(tinit)
         implicit none
@@ -567,12 +573,19 @@ contains
     end function p05_anltc
 
     ! Pleiades problem
-    subroutine plei_feval(this, t, y, yp)
+    integer pure function plei_dim(this) result(n)
+        implicit none
+        class(plei_system), intent(in)   :: this
+        n = this%neqn
+    end function plei_dim
+
+    pure subroutine plei_feval(this, t, y, yp, stat)
         implicit none
         class(plei_system), intent(in)  :: this
         real(kind=rp), intent(in)       :: t
         real(kind=rp), intent(in)       :: y(:)
         real(kind=rp), intent(out)      :: yp(:)
+        logical, intent(out)            :: stat
 
         integer                         :: i, j
         real(kind=rp)                   :: sumx, sumy, rij, rij32
@@ -589,17 +602,11 @@ contains
             end do
             yp(i+14) = sumx
             yp(i+21) = sumy
-        end do   
+        end do
         yp(1:14) = y(15:28)
+        stat = .true.
         return
-    end subroutine plei_feval 
-
-    pure integer function plei_neqn(this) result(neqn)
-        implicit none
-        class(plei_system), intent(in)  :: this
-        neqn = this%numeq
-        return
-    end function plei_neqn
+    end subroutine plei_feval
 
     pure function plei_gettitle(this) result(title)
         implicit none
@@ -612,74 +619,74 @@ contains
     pure function plei_yinit(this) result(yinit)
         implicit none
         class(plei_system), intent(in)  :: this
-        real(kind=rp), allocatable      :: yinit(:)       
+        real(kind=rp), allocatable      :: yinit(:)
 
         allocate(yinit(28))
-        yinit = [3.0_rp ,&  
-                 3.0_rp ,& 
-                -1.0_rp ,& 
-                -3.0_rp ,& 
-                 2.0_rp ,& 
-                -2.0_rp ,& 
-                 2.0_rp ,& 
-                 3.0_rp ,& 
-                -3.0_rp ,& 
-                 2.0_rp ,& 
-                 0.0_rp ,& 
-                 0.0_rp ,& 
-                -4.0_rp ,& 
-                 4.0_rp ,& 
-                 0.0_rp ,& 
-                 0.0_rp ,& 
-                 0.0_rp ,& 
-                 0.0_rp ,& 
-                 0.0_rp ,& 
-                 1.75_rp,& 
-                -1.5_rp ,& 
-                 0.0_rp ,& 
-                 0.0_rp ,& 
-                 0.0_rp ,& 
-                -1.25_rp,& 
-                 1.0_rp ,& 
-                 0.0_rp ,& 
+        yinit = [3.0_rp ,&
+                 3.0_rp ,&
+                -1.0_rp ,&
+                -3.0_rp ,&
+                 2.0_rp ,&
+                -2.0_rp ,&
+                 2.0_rp ,&
+                 3.0_rp ,&
+                -3.0_rp ,&
+                 2.0_rp ,&
+                 0.0_rp ,&
+                 0.0_rp ,&
+                -4.0_rp ,&
+                 4.0_rp ,&
+                 0.0_rp ,&
+                 0.0_rp ,&
+                 0.0_rp ,&
+                 0.0_rp ,&
+                 0.0_rp ,&
+                 1.75_rp,&
+                -1.5_rp ,&
+                 0.0_rp ,&
+                 0.0_rp ,&
+                 0.0_rp ,&
+                -1.25_rp,&
+                 1.0_rp ,&
+                 0.0_rp ,&
                  0.0_rp]
 
         return
-    end function plei_yinit 
+    end function plei_yinit
 
     pure function plei_yend(this) result(yend)
         implicit none
         class(plei_system), intent(in)  :: this
-        real(kind=rp), allocatable      :: yend(:)       
+        real(kind=rp), allocatable      :: yend(:)
 
         allocate(yend(28))
-        yend = [0.3706139143970502e+000_rp,& 
-                0.3237284092057233e+001_rp,& 
-               -0.3222559032418324e+001_rp,& 
-                0.6597091455775310e+000_rp,& 
-                0.3425581707156584e+000_rp,& 
-                0.1562172101400631e+001_rp,& 
-               -0.7003092922212495e+000_rp,& 
-               -0.3943437585517392e+001_rp,& 
-               -0.3271380973972550e+001_rp,& 
-                0.5225081843456543e+001_rp,& 
-               -0.2590612434977470e+001_rp,& 
-                0.1198213693392275e+001_rp,& 
-               -0.2429682344935824e+000_rp,& 
-                0.1091449240428980e+001_rp,& 
-                0.3417003806314313e+001_rp,& 
-                0.1354584501625501e+001_rp,& 
-               -0.2590065597810775e+001_rp,& 
-                0.2025053734714242e+001_rp,& 
-               -0.1155815100160448e+001_rp,& 
-               -0.8072988170223021e+000_rp,& 
-                0.5952396354208710e+000_rp,& 
-               -0.3741244961234010e+001_rp,& 
-                0.3773459685750630e+000_rp,& 
-                0.9386858869551073e+000_rp,& 
-                0.3667922227200571e+000_rp,& 
-               -0.3474046353808490e+000_rp,& 
-                0.2344915448180937e+001_rp,& 
+        yend = [0.3706139143970502e+000_rp,&
+                0.3237284092057233e+001_rp,&
+               -0.3222559032418324e+001_rp,&
+                0.6597091455775310e+000_rp,&
+                0.3425581707156584e+000_rp,&
+                0.1562172101400631e+001_rp,&
+               -0.7003092922212495e+000_rp,&
+               -0.3943437585517392e+001_rp,&
+               -0.3271380973972550e+001_rp,&
+                0.5225081843456543e+001_rp,&
+               -0.2590612434977470e+001_rp,&
+                0.1198213693392275e+001_rp,&
+               -0.2429682344935824e+000_rp,&
+                0.1091449240428980e+001_rp,&
+                0.3417003806314313e+001_rp,&
+                0.1354584501625501e+001_rp,&
+               -0.2590065597810775e+001_rp,&
+                0.2025053734714242e+001_rp,&
+               -0.1155815100160448e+001_rp,&
+               -0.8072988170223021e+000_rp,&
+                0.5952396354208710e+000_rp,&
+               -0.3741244961234010e+001_rp,&
+                0.3773459685750630e+000_rp,&
+                0.9386858869551073e+000_rp,&
+                0.3667922227200571e+000_rp,&
+               -0.3474046353808490e+000_rp,&
+                0.2344915448180937e+001_rp,&
                -0.1947020434263292e+001_rp]
         return
     end function plei_yend
@@ -700,7 +707,7 @@ contains
         implicit none
         class(plei_system), intent(in)  :: this
         real(kind=rp), intent(in)       :: t
-        real(kind=rp), allocatable      :: ysol(:)       
+        real(kind=rp), allocatable      :: ysol(:)
         return
     end function plei_ysol
 

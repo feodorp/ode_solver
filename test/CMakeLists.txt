@@ -1,7 +1,7 @@
 include_directories(${ODESOLVERINCLUDE})
 
 set(SRC
-    problem_set2.f90)
+    problem_set.f90)
 
 add_library(odetestprob ${SRC})
 
@@ -11,3 +11,8 @@ target_link_libraries(ode_test odesolver odetestprob)
 
 add_test(ode_test "./ode_test")
 
+add_executable(trivial_test trivial_test.f90)
+
+target_link_libraries(trivial_test odesolver)
+
+add_test(trivial_test "./trivial_test")

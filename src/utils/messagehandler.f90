@@ -1,21 +1,39 @@
+!
+! This file is part of the ode_solver library distribution (https://github.com/feodorp/ode_solver)
+! Copyright (C) 2022 Feodor Pisnitchenko
+!
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <http://www.gnu.org/licenses/>.
+!
 module messagehandler
     use, intrinsic :: iso_fortran_env, only: output_unit
     use kinds
-    use flags
 
     implicit none
     private
 
-    type, extends(flag), public :: msgflag
-        character(len=15)   :: name
-     contains
-         procedure, pass(a) :: assign_flagflag => msgassign_flagflag
-    end type msgflag
+    type :: mtype
+        integer             :: value
+        character(len=16)   :: header
+    contains
+        procedure, pass(a)  :: eq_mtype
+        generic, public     :: operator(==) => eq_mtype
+    end type
 
-    type(msgflag), public, parameter        :: ErrorMessage   = msgflag(b'1',"ErrorMessage")
-    type(msgflag), public, parameter        :: WarningMessage = msgflag(b'10',"WarningMessage")
-    type(msgflag), public, parameter        :: DebugMessage   = msgflag(b'100',"DebugMessage")
-    type(msgflag), public, parameter        :: InfoMessage    = msgflag(b'1000',"InfoMessage")
+    type(mtype), public, parameter :: ErrorMessage   = mtype(int(b'1'),achar(27)//'[31mERROR'//achar(27)//'[0m')
+    type(mtype), public, parameter :: WarningMessage = mtype(int(b'10'),achar(27)//'[95mWarning'//achar(27)//'[0m')
+    type(mtype), public, parameter :: DebugMessage   = mtype(int(b'100'),'Debug')
+    type(mtype), public, parameter :: InfoMessage    = mtype(int(b'1000'),'')
 
     interface message_report
         module procedure message_report_screen
@@ -37,19 +55,16 @@ module messagehandler
 
 contains
 
-    subroutine msgassign_flagflag(a,b)
-        class(msgflag), intent(out)         :: a
-        class(flag), intent(in)             :: b
-        a%value = b%value
-        select type (b)
-        type is (msgflag)
-            a%name = b%name
-        end select
-    end subroutine
+    logical pure function eq_mtype(a,b) result(equal)
+        class(mtype), intent(in)                 :: a
+        class(mtype), intent(in)                 :: b
+        equal = (a%value == b%value)
+    end function
+
 
     subroutine message_report_screen(msgtype, message, filename, line)
         implicit none
-        type(msgflag), intent(in)                :: msgtype
+        type(mtype), intent(in)                  :: msgtype
         character(len=*), intent(in)             :: message
         character(len=*), intent(in), optional   :: filename
         integer, intent(in), optional            :: line
@@ -65,29 +80,20 @@ contains
     subroutine message_report_file(fid, msgtype, message, filename, line)
         implicit none
         integer, intent(in)                      :: fid
-        type(msgflag), intent(in)                :: msgtype
+        type(mtype), intent(in)                  :: msgtype
         character(len=*), intent(in)             :: message
         character(len=*), intent(in), optional   :: filename
         integer, intent(in), optional            :: line
 
         character(len=:), allocatable            :: pos
-        
+
         if (present(filename) .and. present(line)) then
-            pos = '('//trim(filename) //':'// itoa(line)//')'
-        end if
-
-        if (msgtype == ErrorMessage) then
-            write(fid,'(a, a,": ", a)'), achar(27)//'[31mERROR'//achar(27)//'[0m' , pos, message
-        elseif(msgtype == WarningMessage) then
-            write(fid,'(a, a,": ", a)'), char(27)//'[95mWarning'//achar(27)//'[0m', pos, message
-        elseif(msgtype == DebugMessage) then
-            write(fid,'(a, a,": ", a)'), 'Debug', pos, message
-        elseif(msgtype == InfoMessage) then
-            write(fid,'(a)') message
+            pos = '('//trim(filename) //':'// itoa(line)//'): '
         else
-            return
+            pos = ''
         end if
 
+        write(fid,'(a)') trim(msgtype%header)//pos//message
         return
     end subroutine message_report_file
 
@@ -128,7 +134,7 @@ contains
         implicit none
         real(kind=real32),intent(in)        :: x
         character(len=:),allocatable        :: res
-        
+
         character(len=12)                   :: tmp
 
         write(tmp, '(ES12.5E2)') x
